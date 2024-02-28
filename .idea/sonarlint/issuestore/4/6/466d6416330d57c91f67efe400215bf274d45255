@@ -1,0 +1,15 @@
+
+c
+java:S1192ò"GDefine a constant instead of duplicating this literal "postId" 4 times.(ÚˆÂŒşÿÿÿÿ
+a
+java:S1192o"FDefine a constant instead of duplicating this literal "title" 4 times.(‡²¾Ãøÿÿÿÿ
+b
+java:S1192z"GDefine a constant instead of duplicating this literal "userId" 6 times.(üàÕÆúÿÿÿÿ
+c
+java:S1192o"HDefine a constant instead of duplicating this literal "content" 4 times.(‡²¾Ãøÿÿÿÿ
+Z
+java:S2184‹"CCast one of the operands of this subtraction operation to a "long".(ÇÒ•›
+i
+java:S3776"RRefactor this method to reduce its Cognitive Complexity from 23 to the 15 allowed.(ôÄªñ
+İ
+java:S6541"ÅA "Brain Method" was detected. Refactor it to reduce at least one of the following metrics: LOC from 83 to 64, Complexity from 15 to 14, Nesting Level from 4 to 2, Number of Variables from 29 to 6.(ôÄªñ
