@@ -1,9 +1,13 @@
 package com.cola.apiopeningplatform.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cola.apiopeningplatform.common.IdRequest;
 import com.cola.apiopeningplatform.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import com.cola.apiopeningplatform.model.entity.InterfaceInfo;
+import com.cola.apiopeningplatform.model.enums.InterfaceInfoStatusEnum;
+import com.cola.apiopeningplatform.model.vo.InterfaceInfoVO;
 
 /**
 * @author cola
@@ -27,4 +31,19 @@ public interface InterfaceInfoService extends IService<InterfaceInfo> {
      * @param add
      */
     void validInterfaceInfo(InterfaceInfo interfaceInfo, boolean add);
+
+    /**
+     * 更改接口状态
+     * @param idRequest
+     * @param interfaceInfoStatusEnum
+     * @return
+     */
+    boolean updateInterfaceInfoStatus(IdRequest idRequest, InterfaceInfoStatusEnum interfaceInfoStatusEnum);
+
+    /**
+     * 分页获取接口信息封装
+     * @param interfaceInfoPage
+     * @return
+     */
+    Page<InterfaceInfoVO> getInterfaceInfoVOPage(Page<InterfaceInfo> interfaceInfoPage);
 }

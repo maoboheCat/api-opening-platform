@@ -1,9 +1,12 @@
 package com.cola.apiopeningplatform.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import com.cola.apiopeningplatform.common.ErrorCode;
+import com.cola.apiopeningplatform.common.IdRequest;
 import com.cola.apiopeningplatform.constant.CommonConstant;
 import com.cola.apiopeningplatform.exception.BusinessException;
 import com.cola.apiopeningplatform.exception.ThrowUtils;
@@ -11,11 +14,17 @@ import com.cola.apiopeningplatform.mapper.InterfaceInfoMapper;
 import com.cola.apiopeningplatform.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import com.cola.apiopeningplatform.model.entity.InterfaceInfo;
 import com.cola.apiopeningplatform.model.enums.InterfaceInfoStatusEnum;
+import com.cola.apiopeningplatform.model.vo.InterfaceInfoVO;
 import com.cola.apiopeningplatform.service.InterfaceInfoService;
 import com.cola.apiopeningplatform.utils.SqlUtils;
+import com.cola.interfaceclientsdk.client.ApiClient;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 * @author cola
@@ -25,6 +34,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, InterfaceInfo>
     implements InterfaceInfoService {
+
+    @Resource
+    private ApiClient apiClient;
 
     @Override
     public QueryWrapper<InterfaceInfo> getQueryWrapper(InterfaceInfoQueryRequest interfaceInfoQueryRequest) {
@@ -82,6 +94,40 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (ObjectUtils.isNotEmpty(enumByValue) && !InterfaceInfoStatusEnum.OPEN.equals(enumByValue) && !InterfaceInfoStatusEnum.CLOSE.equals(enumByValue)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口状态错误");
         }
+    }
+
+    @Override
+    public boolean updateInterfaceInfoStatus(IdRequest idRequest, InterfaceInfoStatusEnum interfaceInfoStatusEnum) {
+        if (idRequest == null || idRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        ThrowUtils.throwIf(interfaceInfoStatusEnum == null, ErrorCode.PARAMS_ERROR);
+        Long id = idRequest.getId();
+        InterfaceInfo oldInterfaceInfo = this.getById(id);
+        ThrowUtils.throwIf(oldInterfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
+        // 判断接口是否可以调用
+        com.cola.interfaceclientsdk.model.User user = new com.cola.interfaceclientsdk.model.User();
+        user.setUsername("cola");
+        String username = apiClient.getUsernameByPost(user);
+        ThrowUtils.throwIf(StringUtils.isBlank(username), new BusinessException(ErrorCode.SYSTEM_ERROR, "接口认证失败"));
+        InterfaceInfo interfaceInfo = new InterfaceInfo();
+        interfaceInfo.setId(id);
+        interfaceInfo.setStatus(interfaceInfoStatusEnum.getValue());
+        return this.updateById(interfaceInfo);
+    }
+
+    @Override
+    public Page<InterfaceInfoVO> getInterfaceInfoVOPage(Page<InterfaceInfo> interfaceInfoPage) {
+        ThrowUtils.throwIf(interfaceInfoPage == null, new BusinessException(ErrorCode.NOT_FOUND_ERROR));
+        List<InterfaceInfo> interfaceInfoList = interfaceInfoPage.getRecords();
+        Page<InterfaceInfoVO> interfaceInfoVOPage = new Page<>(interfaceInfoPage.getCurrent(), interfaceInfoPage.getSize(),
+                interfaceInfoPage.getTotal());
+        if (CollUtil.isEmpty(interfaceInfoList)) {
+            return interfaceInfoVOPage;
+        }
+        List<InterfaceInfoVO> interfaceInfoVOList = interfaceInfoList.stream().map(InterfaceInfoVO::objToVo).collect(Collectors.toList());
+        interfaceInfoVOPage.setRecords(interfaceInfoVOList);
+        return interfaceInfoVOPage;
     }
 }
 

@@ -2,10 +2,7 @@ package com.cola.apiopeningplatform.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cola.apiopeningplatform.annotation.AuthCheck;
-import com.cola.apiopeningplatform.common.BaseResponse;
-import com.cola.apiopeningplatform.common.DeleteRequest;
-import com.cola.apiopeningplatform.common.ErrorCode;
-import com.cola.apiopeningplatform.common.ResultUtils;
+import com.cola.apiopeningplatform.common.*;
 import com.cola.apiopeningplatform.constant.UserConstant;
 import com.cola.apiopeningplatform.exception.BusinessException;
 import com.cola.apiopeningplatform.exception.ThrowUtils;
@@ -14,11 +11,15 @@ import com.cola.apiopeningplatform.model.dto.interfaceinfo.InterfaceInfoQueryReq
 import com.cola.apiopeningplatform.model.dto.interfaceinfo.InterfaceInfoUpdataRequest;
 import com.cola.apiopeningplatform.model.entity.InterfaceInfo;
 import com.cola.apiopeningplatform.model.entity.User;
+import com.cola.apiopeningplatform.model.enums.InterfaceInfoStatusEnum;
+import com.cola.apiopeningplatform.model.vo.InterfaceInfoVO;
 import com.cola.apiopeningplatform.service.InterfaceInfoService;
 import com.cola.apiopeningplatform.service.UserService;
 import com.cola.apiopeningplatform.service.impl.InterfaceInfoServiceImpl;
 import com.cola.apiopeningplatform.service.impl.UserServiceImpl;
+import com.cola.interfaceclientsdk.client.ApiClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,10 +36,10 @@ import javax.servlet.http.HttpServletRequest;
 public class InterfaceInfoController {
 
     @Resource
-    InterfaceInfoService interfaceInfoService = new InterfaceInfoServiceImpl();
+    private InterfaceInfoService interfaceInfoService = new InterfaceInfoServiceImpl();
 
     @Resource
-    UserService userService = new UserServiceImpl();
+    private UserService userService = new UserServiceImpl();
 
     /**
      * 创建
@@ -140,6 +141,47 @@ public class InterfaceInfoController {
         Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size),
                 interfaceInfoService.getQueryWrapper(interfaceInfoQueryRequest));
         return ResultUtils.success(interfaceInfoPage);
+    }
+
+    @PostMapping("/list/page/vo")
+    public BaseResponse<Page<InterfaceInfoVO>> listInterfaceInfoVOByPage(@RequestBody InterfaceInfoQueryRequest interfaceInfoQueryRequest) {
+        long current = interfaceInfoQueryRequest.getCurrent();
+        long size = interfaceInfoQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size),
+                interfaceInfoService.getQueryWrapper(interfaceInfoQueryRequest));
+        return ResultUtils.success(interfaceInfoService.getInterfaceInfoVOPage(interfaceInfoPage));
+    }
+
+    /**
+     * 上线
+     * @param idRequest
+     * @return
+     */
+    @PostMapping("/online")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody IdRequest idRequest) {
+        if (idRequest == null || idRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        boolean result = interfaceInfoService.updateInterfaceInfoStatus(idRequest, InterfaceInfoStatusEnum.OPEN);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 下线
+     * @param idRequest
+     * @return
+     */
+    @PostMapping("/offline")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody IdRequest idRequest) {
+        if (idRequest == null || idRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        boolean result = interfaceInfoService.updateInterfaceInfoStatus(idRequest, InterfaceInfoStatusEnum.CLOSE);
+        return ResultUtils.success(result);
     }
 
 }

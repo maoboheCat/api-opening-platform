@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
  * @createData 2024/3/1 15:50
  */
 public enum InterfaceInfoStatusEnum {
-    OPEN("开放", 0),
-    CLOSE("关闭",1);
+    OPEN("开放", 1),
+    CLOSE("关闭",0);
 
     private final String text;
 
