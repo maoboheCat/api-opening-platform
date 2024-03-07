@@ -107,6 +107,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         ThrowUtils.throwIf(oldInterfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
         // 判断接口是否可以调用
         com.cola.interfaceclientsdk.model.User user = new com.cola.interfaceclientsdk.model.User();
+
         user.setUsername("cola");
         String username = apiClient.getUsernameByPost(user);
         ThrowUtils.throwIf(StringUtils.isBlank(username), new BusinessException(ErrorCode.SYSTEM_ERROR, "接口认证失败"));

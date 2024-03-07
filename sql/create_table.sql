@@ -73,6 +73,7 @@ create table if not exists interface_info
     name           varchar(256)                       not null comment '接口名称',
     description    varchar(256)                       null comment '接口描述',
     url            varchar(512)                       not null comment '接口地址',
+    requestParams  text                               null comment '请求参数',
     method         varchar(256)                       not null comment '接口类型',
     requestHeader  text                               null comment '请求头',
     responseHeader text                               null comment '响应头',

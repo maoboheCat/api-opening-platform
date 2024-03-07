@@ -17,9 +17,7 @@ import com.cola.apiopeningplatform.service.InterfaceInfoService;
 import com.cola.apiopeningplatform.service.UserService;
 import com.cola.apiopeningplatform.service.impl.InterfaceInfoServiceImpl;
 import com.cola.apiopeningplatform.service.impl.UserServiceImpl;
-import com.cola.interfaceclientsdk.client.ApiClient;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -117,14 +115,14 @@ public class InterfaceInfoController {
      * @param request
      * @return
      */
-    @GetMapping("/get")
-    public BaseResponse<InterfaceInfo> getInterfaceInfoById(long id, HttpServletRequest request) {
-        if (id < 0) {
+    @GetMapping("/get/vo")
+    public BaseResponse<InterfaceInfoVO> getInterfaceInfoVOById(long id, HttpServletRequest request) {
+        if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
         ThrowUtils.throwIf(interfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
-        return ResultUtils.success(interfaceInfoService.getById(id));
+        return ResultUtils.success(InterfaceInfoVO.objToVo(interfaceInfo));
     }
 
     /**
