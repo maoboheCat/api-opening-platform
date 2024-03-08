@@ -3650,3 +3650,5 @@ o
 ?src/main/java/com/cola/apiopeningplatform/common/IdRequest.java,1\0\10bb5ee7a40ba017e6cd45a2569e6bf495c0edba
 w
 Gsrc/main/java/com/cola/apiopeningplatform/model/vo/InterfaceInfoVO.java,d\2\d2b24ee273291ea44191d3c1bdc3e12e12ff5002
+‘
+asrc/main/java/com/cola/apiopeningplatform/model/dto/interfaceinfo/InterfaceInfoInvokeRequest.java,1\c\1c90c2b45c88e5e0560553d60c50c74eefc39469

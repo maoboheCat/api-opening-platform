@@ -9,6 +9,7 @@ import com.cola.apiopeningplatform.exception.ThrowUtils;
 import com.cola.apiopeningplatform.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import com.cola.apiopeningplatform.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import com.cola.apiopeningplatform.model.dto.interfaceinfo.InterfaceInfoUpdataRequest;
+import com.cola.apiopeningplatform.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import com.cola.apiopeningplatform.model.entity.InterfaceInfo;
 import com.cola.apiopeningplatform.model.entity.User;
 import com.cola.apiopeningplatform.model.enums.InterfaceInfoStatusEnum;
@@ -17,6 +18,8 @@ import com.cola.apiopeningplatform.service.InterfaceInfoService;
 import com.cola.apiopeningplatform.service.UserService;
 import com.cola.apiopeningplatform.service.impl.InterfaceInfoServiceImpl;
 import com.cola.apiopeningplatform.service.impl.UserServiceImpl;
+import com.cola.interfaceclientsdk.client.ApiClient;
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -180,6 +183,30 @@ public class InterfaceInfoController {
         }
         boolean result = interfaceInfoService.updateInterfaceInfoStatus(idRequest, InterfaceInfoStatusEnum.CLOSE);
         return ResultUtils.success(result);
+    }
+
+    @PostMapping("/invoke")
+    public BaseResponse<Object> invokeInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest,
+                                                    HttpServletRequest request) {
+        if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Long id = interfaceInfoInvokeRequest.getId();
+        String requestParams = interfaceInfoInvokeRequest.getUserRequestParams();
+        // 判断接口是否存在
+        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
+        ThrowUtils.throwIf(oldInterfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
+        if (!InterfaceInfoStatusEnum.OPEN.getValue().equals(oldInterfaceInfo.getStatus())) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口已关闭");
+        }
+        // 获取ak， sk
+        User loginUser = userService.getLoginUser(request);
+        String accessKey = loginUser.getAccessKey();
+        String secretKey = loginUser.getSecretKey();
+        ApiClient tempClient = new ApiClient(accessKey, secretKey);
+        Gson gson = new Gson();
+        com.cola.interfaceclientsdk.model.User user = gson.fromJson(requestParams, com.cola.interfaceclientsdk.model.User.class);
+        return ResultUtils.success(tempClient.getUsernameByPost(user));
     }
 
 }
