@@ -37,10 +37,10 @@ import javax.servlet.http.HttpServletRequest;
 public class InterfaceInfoController {
 
     @Resource
-    private InterfaceInfoService interfaceInfoService = new InterfaceInfoServiceImpl();
+    private InterfaceInfoService interfaceInfoService;
 
     @Resource
-    private UserService userService = new UserServiceImpl();
+    private UserService userService;
 
     /**
      * 创建
