@@ -7,19 +7,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 接口状态枚举
+ * 用户-接口 状态枚举
  * @author Maobohe
- * @createData 2024/3/1 15:50
+ * @createData 2024/3/12 19:50
  */
-public enum InterfaceInfoStatusEnum {
-    OPEN("开放", 1),
-    CLOSE("关闭",0);
+public enum UserInterfaceInfoStatusEnum {
+    NORMAL("正常", 0),
+    BAN("禁止",1);
 
     private final String text;
 
     private final Integer value;
 
-    InterfaceInfoStatusEnum(String text, Integer value) {
+    UserInterfaceInfoStatusEnum(String text, Integer value) {
         this.text = text;
         this.value = value;
     }
@@ -33,11 +33,11 @@ public enum InterfaceInfoStatusEnum {
         return Arrays.stream(values()).map(item -> item.value).collect(Collectors.toList());
     }
 
-    public static InterfaceInfoStatusEnum getEnumByValue(Integer value) {
+    public static UserInterfaceInfoStatusEnum getEnumByValue(Integer value) {
         if (ObjectUtils.isNotEmpty(value)) {
             return null;
         }
-        for (InterfaceInfoStatusEnum anEnum : InterfaceInfoStatusEnum.values()) {
+        for (UserInterfaceInfoStatusEnum anEnum : UserInterfaceInfoStatusEnum.values()) {
             if (anEnum.value.equals(value)) {
                 return anEnum;
             }

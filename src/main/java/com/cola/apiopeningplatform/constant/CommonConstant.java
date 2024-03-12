@@ -16,5 +16,10 @@ public interface CommonConstant {
      * 降序
      */
     String SORT_ORDER_DESC = " descend";
-    
+
+    /**
+     * 个数
+     */
+    Integer LIMIT_NUM = 10;
+
 }

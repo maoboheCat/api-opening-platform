@@ -80,7 +80,9 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String sign = headers.getFirst("sign");
         String body = headers.getFirst("body");
         String hostAddress = headers.getFirst("hostAddress");
-        String url = hostAddress +  StringUtils.removeStart(request.getPath().toString(), "/api");
+        StringUtils.removeStart(request.getPath().toString(), "/api");
+        // 去除网关 path 的部分 /api/name/user -> /name/user
+        String url = hostAddress + request.getPath().toString().replaceFirst("/[^/]+/", "/");
         // 检擦用户是否有密钥
         User invokeUser = null;
         try {

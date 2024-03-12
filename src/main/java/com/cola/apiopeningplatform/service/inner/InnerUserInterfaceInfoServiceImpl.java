@@ -6,6 +6,7 @@ import com.cola.apiopeningplatform.exception.BusinessException;
 import com.cola.apiopeningplatform.exception.ThrowUtils;
 import com.cola.apiopeningplatform.mapper.UserMapper;
 import com.cola.apiopeningplatform.model.entity.UserInterfaceInfo;
+import com.cola.apiopeningplatform.model.enums.UserInterfaceInfoStatusEnum;
 import com.cola.apiopeningplatform.service.UserInterfaceInfoService;
 import com.cola.paltformcommon.service.InnerUserInterfaceInfoService;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -38,6 +39,7 @@ public class InnerUserInterfaceInfoServiceImpl implements InnerUserInterfaceInfo
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("interfaceInfoId", interfaceInfoId);
         queryWrapper.eq("userId", userId);
+        queryWrapper.eq("status", UserInterfaceInfoStatusEnum.NORMAL.getValue());
         return userInterfaceInfoService.getOne(queryWrapper) != null;
     }
 

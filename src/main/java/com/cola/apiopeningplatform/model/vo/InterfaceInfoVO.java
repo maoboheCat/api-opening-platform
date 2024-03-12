@@ -58,6 +58,11 @@ public class InterfaceInfoVO implements Serializable {
      */
     private Integer status;
 
+    /**
+     * 调用次数
+     */
+    private Integer totalNum;
+
     private static final long serialVersionUID = 1L;
 
     /**
