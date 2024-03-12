@@ -95,7 +95,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         UpdateWrapper<UserInterfaceInfo> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.setSql("leftNum = leftNum + 1, totalNum = totalNum - 1");
+        updateWrapper.setSql("leftNum = leftNum - 1, totalNum = totalNum + 1");
         updateWrapper.gt("leftNum", 0);
         updateWrapper.eq("interfaceInfoId", interfaceInfoId);
         updateWrapper.eq("userId", userId);

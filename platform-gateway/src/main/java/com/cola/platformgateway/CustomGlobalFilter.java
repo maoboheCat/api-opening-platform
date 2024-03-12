@@ -1,7 +1,15 @@
 package com.cola.platformgateway;
 
 import com.cola.interfaceclientsdk.utils.SignUtils;
+import com.cola.paltformcommon.model.entity.InterfaceInfo;
+import com.cola.paltformcommon.model.entity.User;
+import com.cola.paltformcommon.service.InnerInterfaceInfoService;
+import com.cola.paltformcommon.service.InnerUserInterfaceInfoService;
+import com.cola.paltformcommon.service.InnerUserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.dubbo.config.annotation.DubboReference;
+import org.jetbrains.annotations.NotNull;
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -33,6 +41,15 @@ import java.util.Objects;
 @Component
 public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
+    @DubboReference
+    private InnerUserService innerUserService;
+
+    @DubboReference
+    private InnerInterfaceInfoService innerinterfaceInfoService;
+
+    @DubboReference
+    private InnerUserInterfaceInfoService innerUserInterfaceInfoService;
+
     private static final List<String> IP_WHITE_LIST = Arrays.asList("127.0.0.1");
 
     private static final Long ONE_MINUTES = (long) 60;
@@ -40,10 +57,12 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+        HttpHeaders headers = request.getHeaders();
+        String method = request.getMethodValue();
         // 请求日志
         log.info("请求唯一标识：" + request.getId());
-        log.info("请求路径：" + request.getPath().value());
-        log.info("请求方法：" + request.getMethodValue());
+        log.info("请求路径：" + request.getURI());
+        log.info("请求方法：" + method);
         log.info("请求参数：" + request.getQueryParams());
         String hostString = Objects.requireNonNull(request.getLocalAddress()).getHostString();
         log.info("请求来源地址：" + hostString);
@@ -55,15 +74,24 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             return response.setComplete();
         }
         // 用户鉴权
-        HttpHeaders headers = request.getHeaders();
         String accessKey = headers.getFirst("accessKey");
         String nonce = headers.getFirst("nonce");
         String timestamp = headers.getFirst("timestamp");
         String sign = headers.getFirst("sign");
         String body = headers.getFirst("body");
-        if (!"cola".equals(accessKey)) {
+        String hostAddress = headers.getFirst("hostAddress");
+        String url = hostAddress +  StringUtils.removeStart(request.getPath().toString(), "/api");
+        // 检擦用户是否有密钥
+        User invokeUser = null;
+        try {
+            invokeUser = innerUserService.getInvokeUser(accessKey);
+        } catch (Exception e) {
+            log.error("getInvokeUser error", e);
+        }
+        if (invokeUser == null) {
             return handleNoAuth(response);
         }
+        // 签名验证
         if (Long.parseLong(Objects.requireNonNull(nonce)) > 1000) {
             return handleNoAuth(response);
         }
@@ -71,13 +99,33 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         if ((currentTime - Long.parseLong(Objects.requireNonNull(timestamp))) >= ONE_MINUTES) {
             return handleNoAuth(response);
         }
-        String serverSign = SignUtils.getSisn(body, "abcdefg");
+        String secretKey = invokeUser.getSecretKey();
+        String serverSign = SignUtils.getSisn(body, secretKey);
         if (!serverSign.equals(sign)) {
             return handleNoAuth(response);
         }
         // 检查接口是否存在
-
-        return responseLog(exchange, chain);
+        InterfaceInfo interfaceInfo = null;
+        try {
+            interfaceInfo = innerinterfaceInfoService.getInterfaceInfo(url, method);
+        } catch (Exception e) {
+            log.error("getInterfaceInfo error", e);
+        }
+        if (interfaceInfo == null) {
+            return handleInvokeError(response);
+        }
+        // 检查用户是否可用
+        Long interfaceInfoId = interfaceInfo.getId();
+        Long invokeUserId = invokeUser.getId();
+        try {
+            if (!innerUserInterfaceInfoService.invokeCheck(interfaceInfoId, invokeUserId)) {
+                return handleNoAuth(response);
+            }
+        } catch (Exception e) {
+            log.error("invokeCheck error", e);
+        }
+        // 请求转发，调用接口，响应日志
+        return responseHandle(exchange, chain, interfaceInfoId, invokeUserId);
     }
 
     /**
@@ -86,7 +134,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
      * @param chain
      * @return
      */
-    public Mono<Void> responseLog(ServerWebExchange exchange, GatewayFilterChain chain) {
+    public Mono<Void> responseHandle(ServerWebExchange exchange, GatewayFilterChain chain, long interfaceInfoId, long invokeUserId) {
         try {
             ServerHttpResponse originalResponse = exchange.getResponse();
             // 缓存数据工厂
@@ -98,12 +146,20 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             }
             // 装饰，增强能力
             ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(originalResponse) {
+                @NotNull
                 @Override
                 public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
                     if (body instanceof Flux) {
                         Flux<? extends DataBuffer> fluxBody = Flux.from(body);
                         // 往返回值写数据
                         return super.writeWith(fluxBody.buffer().map(dataBuffers -> {
+                            // 接口已经成功执行
+                            // 接口调用统计
+                            try {
+                                innerUserInterfaceInfoService.invokeCount(interfaceInfoId, invokeUserId);
+                            } catch (Exception e) {
+                                log.error("invokeCount error", e);
+                            }
                             // 合并多个流集合，解决返回体分段传输
                             DataBufferFactory dataBufferFactory = new DefaultDataBufferFactory();
                             DataBuffer buff = dataBufferFactory.join(dataBuffers);

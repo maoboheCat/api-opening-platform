@@ -23,6 +23,8 @@ public class ApiClient {
 
     private static final String GATEWAY_HOST = "http://localhost:8082";
 
+    private static final String INTERFACE_HOST = "http://localhost:8081";
+
     private String accessKey;
 
     private String secretKey;
@@ -55,6 +57,7 @@ public class ApiClient {
         map.put("body", body);
         map.put("timestamp", String.valueOf(System.currentTimeMillis() / 1000));
         map.put("sign", getSisn(body, secretKey));
+        map.put("hostAddress", INTERFACE_HOST);
         return map;
     }
 

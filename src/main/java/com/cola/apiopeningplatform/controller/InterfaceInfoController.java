@@ -16,8 +16,6 @@ import com.cola.apiopeningplatform.model.enums.InterfaceInfoStatusEnum;
 import com.cola.apiopeningplatform.model.vo.InterfaceInfoVO;
 import com.cola.apiopeningplatform.service.InterfaceInfoService;
 import com.cola.apiopeningplatform.service.UserService;
-import com.cola.apiopeningplatform.service.impl.InterfaceInfoServiceImpl;
-import com.cola.apiopeningplatform.service.impl.UserServiceImpl;
 import com.cola.interfaceclientsdk.client.ApiClient;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;

@@ -9,6 +9,8 @@ spring:
           uri: http://localhost:8081
           predicates:
             - Path=/api/**
+          filters:
+            - AddRequestHeader=gateway_one, maobohe_one
 logging:
   level:
     org:

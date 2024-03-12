@@ -25,6 +25,13 @@
             <artifactId>interface-client-sdk</artifactId>
             <version>0.0.1</version>
         </dependency>
+        <!-- 自制公共接口 -->
+        <dependency>
+            <groupId>org.cola</groupId>
+            <artifactId>platform-common</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
