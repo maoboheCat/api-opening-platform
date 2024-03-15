@@ -18,10 +18,16 @@ import com.cola.apiopeningplatform.model.vo.UserInterfaceInfoVO;
 import com.cola.apiopeningplatform.service.UserInterfaceInfoService;
 import com.cola.apiopeningplatform.utils.SqlUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.cola.apiopeningplatform.constant.RedisConstant.REDIS_USERINTERFACEINFO_INVOKECOUNT;
 
 /**
 * @author cola
@@ -31,6 +37,10 @@ import java.util.stream.Collectors;
 @Service
 public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoMapper, UserInterfaceInfo>
     implements UserInterfaceInfoService {
+
+    @Resource
+    private RedissonClient redissonClient;
+
 
     @Override
     public void validUserInterfaceInfo(UserInterfaceInfo userInterfaceInfo, boolean add) {
@@ -88,17 +98,29 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
     }
 
 
-    // TODO 需要加分布式锁, 防止暴点
     @Override
     public boolean invokeCount(long interfaceInfoId, long userId) {
         if (interfaceInfoId <= 0 || userId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UpdateWrapper<UserInterfaceInfo> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.setSql("leftNum = leftNum - 1, totalNum = totalNum + 1");
-        updateWrapper.gt("leftNum", 0);
-        updateWrapper.eq("interfaceInfoId", interfaceInfoId);
-        updateWrapper.eq("userId", userId);
-        return this.update(updateWrapper);
+        String redisKey =String.format("%s:%s:%s", REDIS_USERINTERFACEINFO_INVOKECOUNT, userId, interfaceInfoId);
+        RLock lock = redissonClient.getLock(redisKey);
+        try {
+            while (true) {
+                if (lock.tryLock(0, -1, TimeUnit.MILLISECONDS)) {
+                    UpdateWrapper<UserInterfaceInfo> updateWrapper = new UpdateWrapper<>();
+                    updateWrapper.setSql("leftNum = leftNum - 1, totalNum = totalNum + 1");
+                    updateWrapper.gt("leftNum", 0);
+                    updateWrapper.eq("interfaceInfoId", interfaceInfoId);
+                    updateWrapper.eq("userId", userId);
+                    return this.update(updateWrapper);
+                }
+            }
+        } catch (InterruptedException e) {
+            log.error("invokeCount lock error", e);
+            return false;
+        } finally {
+            lock.unlock();
+        }
     }
 }

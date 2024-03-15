@@ -120,7 +120,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         Long interfaceInfoId = interfaceInfo.getId();
         Long invokeUserId = invokeUser.getId();
         try {
-            if (!innerUserInterfaceInfoService.invokeCheck(interfaceInfoId, invokeUserId)) {
+            if (!innerUserInterfaceInfoService.invokeCheck(interfaceInfoId, invokeUserId, nonce)) {
                 return handleNoAuth(response);
             }
         } catch (Exception e) {

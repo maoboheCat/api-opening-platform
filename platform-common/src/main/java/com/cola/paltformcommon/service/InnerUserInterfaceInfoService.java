@@ -19,7 +19,8 @@ public interface InnerUserInterfaceInfoService{
      * 检验用户
      * @param interfaceInfoId
      * @param userId
+     * @param nonce
      * @return
      */
-    boolean invokeCheck(long interfaceInfoId, long userId);
+    boolean invokeCheck(long interfaceInfoId, long userId, String nonce);
 }

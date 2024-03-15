@@ -25,7 +25,7 @@ spring:
   session:
       # 30 天过期
       timeout: 2592000
-      store-type: none
+      store-type: redis
   # Elasticsearch 配置
   # todo 需替换配置，然后取消注释
 #  elasticsearch:

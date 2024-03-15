@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 @RestController
 @RequestMapping("/userInterfaceInfo")
 @Slf4j
-public class UserUserInterfaceInfoController {
+public class UserInterfaceInfoController {
 
     @Resource
     private UserInterfaceInfoService userInterfaceInfoService;

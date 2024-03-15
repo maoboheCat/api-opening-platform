@@ -2,10 +2,7 @@ package com.cola.apiopeningplatform.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cola.apiopeningplatform.annotation.AuthCheck;
-import com.cola.apiopeningplatform.common.BaseResponse;
-import com.cola.apiopeningplatform.common.DeleteRequest;
-import com.cola.apiopeningplatform.common.ErrorCode;
-import com.cola.apiopeningplatform.common.ResultUtils;
+import com.cola.apiopeningplatform.common.*;
 import com.cola.apiopeningplatform.config.WxOpenConfig;
 import com.cola.apiopeningplatform.constant.UserConstant;
 import com.cola.apiopeningplatform.exception.BusinessException;
@@ -13,6 +10,7 @@ import com.cola.apiopeningplatform.exception.ThrowUtils;
 import com.cola.apiopeningplatform.model.dto.user.*;
 import com.cola.apiopeningplatform.model.entity.User;
 import com.cola.apiopeningplatform.model.vo.LoginUserVO;
+import com.cola.apiopeningplatform.model.vo.UserKeyVO;
 import com.cola.apiopeningplatform.model.vo.UserVO;
 import com.cola.apiopeningplatform.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +32,6 @@ import static com.cola.apiopeningplatform.service.impl.UserServiceImpl.SALT;
 /**
  * 用户接口
  *
- 
  */
 @RestController
 @RequestMapping("/user")
@@ -304,5 +301,16 @@ public class UserController {
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
+    }
+
+    @PostMapping("/update/key")
+    public BaseResponse<UserKeyVO> updateMyKey(@RequestBody IdRequest idRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(idRequest == null, new BusinessException(ErrorCode.PARAMS_ERROR));
+        Long userId = idRequest.getId();
+        if (userId == null || userId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(userService.updateMyKey(userId, loginUser));
     }
 }

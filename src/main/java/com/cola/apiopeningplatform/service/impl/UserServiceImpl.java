@@ -5,6 +5,8 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cola.apiopeningplatform.exception.ThrowUtils;
+import com.cola.apiopeningplatform.model.vo.UserKeyVO;
 import com.cola.apiopeningplatform.service.UserService;
 import com.cola.apiopeningplatform.common.ErrorCode;
 import com.cola.apiopeningplatform.constant.CommonConstant;
@@ -275,5 +277,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
+    }
+
+    @Override
+    public UserKeyVO updateMyKey(long userId, User loginUser) {
+        ThrowUtils.throwIf(userId <= 0, new BusinessException(ErrorCode.PARAMS_ERROR));
+        User currentUser = this.getById(userId);
+        ThrowUtils.throwIf(currentUser == null, new BusinessException(ErrorCode.NOT_FOUND_ERROR));
+        UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(currentUser.getUserRole());
+        if (userId != currentUser.getId() || !UserRoleEnum.ADMIN.equals(userRoleEnum)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+        String userAccount = currentUser.getUserAccount();
+        // 重新生成ak，sk
+        String accessKey = DigestUtil.md5Hex(SALT + userAccount + RandomUtil.randomNumbers(5));
+        String secretKey = DigestUtil.md5Hex(userAccount + RandomUtil.randomNumbers(8) + SALT );
+        currentUser.setSecretKey(secretKey);
+        currentUser.setAccessKey(accessKey);
+        this.updateById(currentUser);
+        UserKeyVO userKeyVO = UserKeyVO.objToVo(currentUser);
+        return userKeyVO;
     }
 }

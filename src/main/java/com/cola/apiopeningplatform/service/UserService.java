@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.cola.apiopeningplatform.model.dto.user.UserQueryRequest;
 import com.cola.apiopeningplatform.model.entity.User;
 import com.cola.apiopeningplatform.model.vo.LoginUserVO;
+import com.cola.apiopeningplatform.model.vo.UserKeyVO;
 import com.cola.apiopeningplatform.model.vo.UserVO;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 
@@ -14,7 +15,6 @@ import java.util.List;
 /**
  * 用户服务
  *
- 
  */
 public interface UserService extends IService<User> {
 
@@ -118,4 +118,11 @@ public interface UserService extends IService<User> {
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 
+    /**
+     * 更新用户的许可证和密钥
+     * @param userId
+     * @param loginUser
+     * @return
+     */
+    UserKeyVO updateMyKey(long userId, User loginUser);
 }
